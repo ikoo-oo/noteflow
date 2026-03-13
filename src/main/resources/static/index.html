@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✨ Noteflow — Your Cozy Note Space</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d12;
+    --surface: #14141c;
+    --surface2: #1c1c28;
+    --surface3: #242435;
+    --border: #2a2a3d;
+    --accent: #c084fc;
+    --accent2: #f472b6;
+    --text: #e8e8f0;
+    --text-muted: #7070a0;
+    --text-dim: #404060;
+    --glow: rgba(192,132,252,0.15);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(192,132,252,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed; bottom: -150px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(244,114,182,0.05) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(13,13,18,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif; font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .logo span { font-style: italic; }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  .stats-pill {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; font-size: 0.78rem; color: var(--text-muted);
+  }
+  .stats-pill b { color: var(--accent); }
+  .donate-btn {
+    background: linear-gradient(135deg, #f59e0b, #f97316); color: #fff;
+    border: none; border-radius: 20px; padding: 8px 18px;
+    font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; text-decoration: none;
+    transition: all 0.2s; box-shadow: 0 0 20px rgba(249,115,22,0.25);
+  }
+  .donate-btn:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(249,115,22,0.4); }
+  .app-layout {
+    display: grid; grid-template-columns: 280px 1fr;
+    min-height: 100vh; padding-top: 64px;
+  }
+  .sidebar {
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 1.5rem; position: sticky; top: 64px;
+    height: calc(100vh - 64px); overflow-y: auto; z-index: 10;
+    display: flex; flex-direction: column;
+  }
+  .sidebar-section { margin-bottom: 1.5rem; }
+  .sidebar-label {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-dim); margin-bottom: 0.75rem; padding-left: 8px;
+  }
+  .filter-btn {
+    width: 100%; text-align: left; background: transparent; border: none;
+    color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    padding: 9px 12px; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; transition: all 0.15s; margin-bottom: 2px;
+  }
+  .filter-btn:hover { background: var(--surface2); color: var(--text); }
+  .filter-btn.active {
+    background: var(--glow); color: var(--accent);
+    border: 1px solid rgba(192,132,252,0.2);
+  }
+  .filter-btn .count {
+    margin-left: auto; background: var(--surface3); border-radius: 10px;
+    padding: 1px 8px; font-size: 0.72rem; color: var(--text-dim);
+  }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 4px 10px; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  }
+  .tag:hover { background: var(--glow); border-color: rgba(192,132,252,0.3); color: var(--accent); }
+  .sidebar-coffee {
+    margin-top: auto; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.2rem; text-align: center;
+  }
+  .sidebar-coffee .coffee-emoji { font-size: 1.8rem; margin-bottom: 0.5rem; }
+  .sidebar-coffee p { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.5; }
+  .sidebar-coffee a {
+    display: block; background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #fff; border-radius: 10px; padding: 8px; font-size: 0.8rem;
+    font-weight: 600; text-decoration: none; transition: all 0.2s;
+  }
+  .sidebar-coffee a:hover { transform: translateY(-1px); }
+  .main { padding: 2rem; position: relative; z-index: 1; }
+  .main-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;
+  }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 1.8rem; }
+  .page-title span {
+    font-style: italic;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .search-bar {
+    display: flex; align-items: center; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 0 14px; gap: 10px; width: 280px; transition: all 0.2s;
+  }
+  .search-bar:focus-within {
+    border-color: rgba(192,132,252,0.4); box-shadow: 0 0 0 3px var(--glow);
+  }
+  .search-bar svg { color: var(--text-dim); flex-shrink: 0; }
+  .search-bar input {
+    background: transparent; border: none; outline: none; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 10px 0; width: 100%;
+  }
+  .search-bar input::placeholder { color: var(--text-dim); }
+  .new-note-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    border: none; border-radius: 12px; padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s; box-shadow: 0 0 20px var(--glow);
+  }
+  .new-note-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 30px var(--glow); }
+  .toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .notes-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;
+  }
+  .note-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.25rem; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+    animation: cardIn 0.3s ease both;
+  }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .note-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 16px 16px 0 0;
+  }
+  .note-card.color-purple::before { background: linear-gradient(90deg, #c084fc, #818cf8); }
+  .note-card.color-pink::before { background: linear-gradient(90deg, #f472b6, #fb7185); }
+  .note-card.color-cyan::before { background: linear-gradient(90deg, #67e8f9, #34d399); }
+  .note-card.color-amber::before { background: linear-gradient(90deg, #fbbf24, #f97316); }
+  .note-card:hover {
+    border-color: rgba(192,132,252,0.3); transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  .note-card.pinned {
+    border-color: rgba(192,132,252,0.25);
+    background: linear-gradient(135deg, var(--surface), rgba(192,132,252,0.04));
+  }
+  .note-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.75rem; }
+  .note-title { font-size: 1rem; font-weight: 600; color: var(--text); line-height: 1.4; flex: 1; }
+  .note-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+  .note-card:hover .note-actions { opacity: 1; }
+  .icon-btn {
+    width: 28px; height: 28px; border-radius: 8px; border: none;
+    background: var(--surface2); color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 0.75rem;
+  }
+  .icon-btn:hover { background: var(--surface3); color: var(--text); }
+  .icon-btn.delete:hover { background: rgba(251,113,133,0.15); color: #fb7185; }
+  .icon-btn.pin-active { color: var(--accent); }
+  .note-body {
+    font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+    overflow: hidden; margin-bottom: 1rem;
+  }
+  .note-footer { display: flex; align-items: center; justify-content: space-between; }
+  .note-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .note-tag { background: var(--surface2); border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; color: var(--text-dim); }
+  .note-date { font-size: 0.72rem; color: var(--text-dim); }
+  .empty-state { grid-column: 1 / -1; text-align: center; padding: 5rem 2rem; }
+  .empty-icon { font-size: 4rem; margin-bottom: 1rem; display: block; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .empty-state h3 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .empty-state p { font-size: 0.88rem; color: var(--text-dim); }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px); z-index: 200;
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    width: 100%; max-width: 580px; padding: 2rem;
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+  }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; }
+  .close-btn {
+    width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: all 0.15s;
+  }
+  .close-btn:hover { background: var(--surface2); color: var(--text); }
+  .form-group { margin-bottom: 1.25rem; }
+  .form-label { display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.5rem; }
+  .form-input, .form-textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 11px 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; outline: none; transition: all 0.2s; resize: none;
+  }
+  .form-input:focus, .form-textarea:focus {
+    border-color: rgba(192,132,252,0.5); box-shadow: 0 0 0 3px var(--glow); background: var(--surface3);
+  }
+  .form-textarea { min-height: 160px; line-height: 1.6; }
+  .color-picker { display: flex; gap: 8px; }
+  .color-option {
+    width: 28px; height: 28px; border-radius: 8px; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.15s;
+  }
+  .color-option.selected { border-color: var(--text); transform: scale(1.15); }
+  .color-option.purple { background: linear-gradient(135deg, #c084fc, #818cf8); }
+  .color-option.pink { background: linear-gradient(135deg, #f472b6, #fb7185); }
+  .color-option.cyan { background: linear-gradient(135deg, #67e8f9, #34d399); }
+  .color-option.amber { background: linear-gradient(135deg, #fbbf24, #f97316); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem; }
+  .btn-secondary {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+    border-radius: 12px; padding: 10px 20px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-secondary:hover { background: var(--surface3); color: var(--text); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    border: none; border-radius: 12px; padding: 10px 24px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px var(--glow);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--glow); }
+  .delete-modal .modal { max-width: 400px; text-align: center; }
+  .warn-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+  .delete-modal h3 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 0.5rem; }
+  .delete-modal p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .btn-danger {
+    background: linear-gradient(135deg, #fb7185, #f43f5e); color: #fff;
+    border: none; border-radius: 12px; padding: 10px 24px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(244,63,94,0.3); }
+  .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 20px; font-size: 0.88rem; display: flex; align-items: center; gap: 10px;
+    animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  .toast.success { border-color: rgba(52,211,153,0.3); }
+  .toast.success .toast-icon { color: #34d399; }
+  .toast.error { border-color: rgba(251,113,133,0.3); }
+  .toast.error .toast-icon { color: #fb7185; }
+  .view-toggle { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  .view-btn {
+    width: 34px; height: 34px; border: none; background: transparent; color: var(--text-dim);
+    cursor: pointer; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-size: 0.8rem;
+  }
+  .view-btn.active { background: var(--surface3); color: var(--accent); }
+  .notes-grid.list { grid-template-columns: 1fr; gap: 6px; }
+  .notes-grid.list .note-card {
+    display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-radius: 12px;
+  }
+  .notes-grid.list .note-card::before {
+    width: 3px; height: 100%; top: 0; left: 0; right: auto; border-radius: 12px 0 0 12px;
+  }
+  .notes-grid.list .note-body { -webkit-line-clamp: 1; margin-bottom: 0; flex: 1; }
+  .notes-grid.list .note-card-header { margin-bottom: 0; min-width: 200px; }
+  .notes-grid.list .note-footer { margin-left: auto; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+  select { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); border-radius: 10px; padding: 7px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; outline: none; cursor: pointer; }
+  @media (max-width: 768px) {
+    .app-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 1rem; }
+    .notes-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Note<span>flow</span></div>
+  <div class="header-right">
+    <div class="stats-pill"><b id="note-count">4</b> notes</div>
+    <a href="https://ko-fi.com/ikramo" target="_blank" class="donate-btn">☕ Support me on Ko-fi</a>
+  </div>
+</header>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Filters</div>
+      <button class="filter-btn active" onclick="filterNotes('all',this)">
+        <span>📝</span> All Notes <span class="count" id="count-all">4</span>
+      </button>
+      <button class="filter-btn" onclick="filterNotes('pinned',this)">
+        <span>📌</span> Pinned <span class="count" id="count-pinned">1</span>
+      </button>
+      <button class="filter-btn" onclick="filterNotes('recent',this)">
+        <span>🕐</span> Recent <span class="count" id="count-recent">2</span>
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tags</div>
+      <div class="tag-list" id="tag-list"></div>
+    </div>
+    <div class="sidebar-coffee">
+      <div class="coffee-emoji">☕</div>
+      <p>Like Noteflow? Support the dev with a coffee!</p>
+      <a href="https://ko-fi.com/ikramo" target="_blank">☕ Support me on Ko-fi</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="main-header">
+      <h1 class="page-title">Your <span>Notes</span></h1>
+      <button class="new-note-btn" onclick="openCreateModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Note
+      </button>
+    </div>
+    <div class="toolbar">
+      <div class="search-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search notes..." id="search-input" oninput="searchNotes(this.value)">
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:0.75rem;">
+        <span style="font-size:0.82rem;color:var(--text-dim)">Sort:</span>
+        <select onchange="sortNotes(this.value)">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="alpha">A→Z</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="grid-view-btn" onclick="setView('grid')" title="Grid">⊞</button>
+          <button class="view-btn" id="list-view-btn" onclick="setView('list')" title="List">☰</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes-grid" id="notes-grid"></div>
+  </main>
+</div>
+
+<!-- CREATE/EDIT MODAL -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">New Note ✨</h2>
+      <button class="close-btn" onclick="closeModal('note-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input type="text" class="form-input" id="note-title-input" placeholder="Give your note a title...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Content</label>
+      <textarea class="form-textarea" id="note-content-input" placeholder="Write your thoughts here..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tags (comma separated)</label>
+      <input type="text" class="form-input" id="note-tags-input" placeholder="work, ideas, personal...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color accent</label>
+      <div class="color-picker">
+        <div class="color-option purple selected" data-color="purple" onclick="selectColor('purple')"></div>
+        <div class="color-option pink" data-color="pink" onclick="selectColor('pink')"></div>
+        <div class="color-option cyan" data-color="cyan" onclick="selectColor('cyan')"></div>
+        <div class="color-option amber" data-color="amber" onclick="selectColor('amber')"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('note-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay delete-modal" id="delete-modal">
+  <div class="modal">
+    <span class="warn-icon">🗑️</span>
+    <h3>Delete this note?</h3>
+    <p>This action can't be undone. Your note will be permanently removed.</p>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn-secondary" onclick="closeModal('delete-modal')">Keep it</button>
+      <button class="btn-danger" onclick="confirmDelete()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ===== STATE & VARIABLES =====
+// These store the current state of the app
+let notes = [];                                    // Array to hold all notes from database
+let nextId = 1;                                    // Counter for generating new note IDs (deprecated - backend handles this now)
+let editingId=null;                                // ID of note being edited, null if creating new
+let deleteId=null;                                 // ID of note to be deleted
+let selectedColor='purple';                        // Currently selected color for new/edited note
+let currentFilter='all';                           // Current filter: 'all', 'pinned', or 'recent'
+let searchTerm='';                                 // Current search query
+
+// ===== FETCH NOTES FROM SERVER =====
+// Called on page load to get all notes from the Spring Boot API
+async function loadNotes() {
+  const res = await fetch('/api/notes');           // GET request to backend API
+  const data = await res.json();                   // Parse JSON response
+  // Convert date strings to Date objects and split comma-separated tags into arrays
+  notes = data.map(n => ({
+    ...n, 
+    createdAt: new Date(n.createdAt),             // Convert "2024-01-10T15:30:00" to Date object
+    tags: n.tags ? n.tags.split(',').map(t=>t.trim()) : []  // "work,design" → ["work", "design"]
+  }));
+  render();                                        // Display the notes on page
+}
+
+// ===== DISPLAY NOTES ON PAGE =====
+// Main function that renders notes to the UI based on current filters
+function render() {
+  const grid = document.getElementById('notes-grid');  // Get the grid container
+  let filtered = [...notes];                      // Copy all notes array
+  
+  // Filter by search term if user typed something
+  if (searchTerm) {
+    const s = searchTerm.toLowerCase();
+    filtered = filtered.filter(n => 
+      n.title.toLowerCase().includes(s) ||        // Search in title
+      n.content.toLowerCase().includes(s) ||      // Search in content
+      n.tags.some(t=>t.toLowerCase().includes(s)) // Search in tags
+    );
+  }
+  
+  // Apply filter based on sidebar selection
+  if (currentFilter==='pinned') filtered = filtered.filter(n=>n.pinned);
+  if (currentFilter==='recent') filtered = filtered.filter(n=>n.createdAt.getTime()>Date.now()-86400000);
+  
+  // Sort: pinned notes first, then by newest first
+  filtered.sort((a,b)=>b.pinned-a.pinned||b.createdAt-a.createdAt);
+
+  // Update all the counter badges
+  document.getElementById('note-count').textContent = notes.length;
+  document.getElementById('count-all').textContent = notes.length;
+  document.getElementById('count-pinned').textContent = notes.filter(n=>n.pinned).length;
+  document.getElementById('count-recent').textContent = notes.filter(n=>n.createdAt.getTime()>Date.now()-86400000).length;
+
+  // Extract all unique tags from all notes and display them in sidebar
+  const allTags = [...new Set(notes.flatMap(n=>n.tags))];
+  document.getElementById('tag-list').innerHTML = allTags.map(t=>`<span class="tag" onclick="filterByTag('${t}')">#${t}</span>`).join('');
+
+  // Show empty state if no notes match current filter
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><span class="empty-icon">🌙</span><h3>Nothing here yet</h3><p>${searchTerm?'No notes match your search.':'Create your first note!'}</p></div>`;
+    return;
+  }
+  
+  // Generate HTML for each filtered note and display them
+  grid.innerHTML = filtered.map((note,i)=>`
+    <div class="note-card color-${note.color}${note.pinned?' pinned':''}" style="animation-delay:${i*0.04}s" onclick="openEditModal(${note.id})">
+      <div class="note-card-header">
+        <div class="note-title">${note.pinned?'📌 ':''}${esc(note.title)}</div>
+        <div class="note-actions" onclick="event.stopPropagation()">
+          <button class="icon-btn${note.pinned?' pin-active':''}" onclick="togglePin(${note.id})" title="${note.pinned?'Unpin':'Pin'}">📌</button>
+          <button class="icon-btn delete" onclick="askDelete(${note.id})" title="Delete">🗑</button>
+        </div>
+      </div>
+      <div class="note-body">${esc(note.content)}</div>
+      <div class="note-footer">
+        <div class="note-tags">${note.tags.map(t=>`<span class="note-tag">#${t}</span>`).join('')}</div>
+        <span class="note-date">${timeAgo(note.createdAt)}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ===== SAVE NEW OR EDITED NOTE =====
+// Called when user clicks "Save Note" button
+async function saveNote() {
+  // Get form input values
+  const title = document.getElementById('note-title-input').value.trim();
+  const content = document.getElementById('note-content-input').value.trim();
+  const tags = document.getElementById('note-tags-input').value.trim().split(',').map(t=>t.trim()).filter(Boolean);
+  
+  // Validate: title is required
+  if (!title) { shake('note-title-input'); return; }
+  
+  // Prepare data to send to backend
+  const payload = {title, content, tags: tags.join(','), color:selectedColor, pinned:false};
+  
+  try {
+    if (editingId) {
+      // Update existing note: PUT request with note ID
+      await fetch(`/api/notes/${editingId}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      toast('✏️ Note updated!','success');
+    } else {
+      // Create new note: POST request
+      await fetch('/api/notes', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      toast('✨ Note created!','success');
+    }
+    await loadNotes();                             // Fetch updated list from backend
+    closeModal('note-modal');                      // Close the form
+  } catch(e) {
+    toast('❌ Error saving note','error');
+  }
+}
+
+// ===== PIN/UNPIN NOTE =====
+// Toggle a note's pinned status and update backend
+async function togglePin(id) {
+  const n = notes.find(n=>n.id===id);
+  const newPinnedState = !n.pinned;
+  try {
+    // PATCH request to update only the pinned field
+    await fetch(`/api/notes/${id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pinned:newPinnedState})});
+    n.pinned = newPinnedState;
+    toast(newPinnedState?'📌 Note pinned!':'📌 Unpinned','success');
+    render();
+  } catch(e) {
+    toast('❌ Error updating pin status','error');
+  }
+}
+
+// ===== DELETE NOTE =====
+// Show confirmation dialog before deleting
+function askDelete(id) { 
+  deleteId=id;                                    // Store ID of note to delete
+  openModal('delete-modal');                      // Show delete confirmation modal
+}
+
+// Actually delete the note after user confirms
+async function confirmDelete() {
+  try {
+    // DELETE request to remove note from backend
+    await fetch(`/api/notes/${deleteId}`, {method:'DELETE'});
+    notes = notes.filter(n=>n.id!==deleteId);    // Remove from local array
+    deleteId=null;
+    closeModal('delete-modal');
+    toast('🗑️ Note deleted','success');
+    render();
+  } catch(e) {
+    toast('❌ Error deleting note','error');
+  }
+}
+
+// ===== MODAL CONTROLS =====
+// Open create new note form
+function openCreateModal() {
+  editingId=null;                                  // Not editing, creating new
+  document.getElementById('modal-title').textContent='New Note ✨';
+  document.getElementById('note-title-input').value='';
+  document.getElementById('note-content-input').value='';
+  document.getElementById('note-tags-input').value='';
+  selectColor('purple'); 
+  openModal('note-modal');
+}
+
+// Open edit existing note form
+function openEditModal(id) {
+  const n = notes.find(n=>n.id===id); 
+  editingId=id;                                    // Mark as editing this note
+  document.getElementById('modal-title').textContent='Edit Note ✏️';
+  document.getElementById('note-title-input').value=n.title;
+  document.getElementById('note-content-input').value=n.content;
+  document.getElementById('note-tags-input').value=n.tags.join(', ');  // Convert array back to comma-separated
+  selectColor(n.color); 
+  openModal('note-modal');
+}
+
+// Show a modal by adding 'open' class
+function openModal(id) { 
+  document.getElementById(id).classList.add('open'); 
+}
+
+// Hide a modal by removing 'open' class
+function closeModal(id) { 
+  document.getElementById(id).classList.remove('open'); 
+}
+
+// ===== FILTER & SEARCH =====
+// Handle filter button clicks (All, Pinned, Recent)
+function filterNotes(f,btn) {
+  currentFilter=f;                                 // Change filter type
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');            // Highlight selected filter button
+  render();
+}
+
+// Search by clicking on a tag
+function filterByTag(tag) {
+  searchTerm=tag; 
+  document.getElementById('search-input').value=tag;
+  render();
+}
+
+// Search by typing in search box
+function searchNotes(v) { 
+  searchTerm=v; 
+  render();
+}
+
+// ===== SORTING =====
+// Re-sort notes based on dropdown selection
+function sortNotes(by) {
+  if(by==='newest') notes.sort((a,b)=>b.createdAt-a.createdAt);
+  if(by==='oldest') notes.sort((a,b)=>a.createdAt-b.createdAt);
+  if(by==='alpha') notes.sort((a,b)=>a.title.localeCompare(b.title));
+  render();
+}
+
+// ===== VIEW MODE =====
+// Switch between grid and list view
+function setView(v) {
+  // Apply 'list' class for list view, remove it for grid view
+  document.getElementById('notes-grid').className=v==='list'?'notes-grid list':'notes-grid';
+  document.getElementById('grid-view-btn').classList.toggle('active',v==='grid');
+  document.getElementById('list-view-btn').classList.toggle('active',v==='list');
+}
+
+// ===== COLOR PICKER =====
+// Update selected color when user clicks a color option
+function selectColor(c) {
+  selectedColor=c;
+  document.querySelectorAll('.color-option').forEach(el=>el.classList.toggle('selected',el.dataset.color===c));
+}
+
+// ===== NOTIFICATIONS =====
+// Show a temporary message at bottom right
+function toast(msg,type='success') {
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;                    // 'success' or 'error' class for styling
+  t.innerHTML=`<span class="toast-icon">${type==='success'?'✓':'✗'}</span> ${msg}`;
+  c.appendChild(t); 
+  setTimeout(()=>t.remove(),3000);                // Auto-remove after 3 seconds
+}
+
+// ===== INPUT VALIDATION =====
+// Shake animation on invalid input (e.g., empty title)
+function shake(id) {
+  const el=document.getElementById(id);
+  el.style.borderColor='#fb7185';
+  el.style.animation='shake 0.3s ease';
+  setTimeout(()=>{el.style.borderColor='';el.style.animation='';},600);
+}
+
+// ===== UTILITIES =====
+// Escape HTML special characters to prevent XSS attacks
+function esc(s) { 
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); 
+}
+
+// Convert timestamp to relative time string (e.g., "2h ago", "just now")
+function timeAgo(date) {
+  const d=Date.now()-date.getTime();
+  if(d<60000) return 'just now';
+  if(d<3600000) return Math.floor(d/60000)+'m ago';
+  if(d<86400000) return Math.floor(d/3600000)+'h ago';
+  return Math.floor(d/86400000)+'d ago';
+}
+
+// ===== EVENT LISTENERS =====
+// Close modal when clicking outside it
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();openCreateModal();}  // Ctrl+N = new note
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));  // Esc = close modal
+});
+
+// ===== INITIALIZATION =====
+// Load notes from backend when page loads
+loadNotes();
+</script>
+</body>
+</html>
